@@ -21423,16 +21423,39 @@
 
 	var React = __webpack_require__(1);
 	var SearchUser = __webpack_require__(173);
+	var UserInfo = __webpack_require__(200);
 
 	var GitHub = React.createClass({
 	    displayName: 'GitHub',
 
 
+	    getInitialState: function () {
+	        return {
+	            user: null,
+	            repos: []
+	        };
+	    },
+
+	    updateUser: function (user) {
+	        this.setState({ user: user });
+	    },
+
+	    updateRepos: function (repos) {
+	        this.setState({ repos: repos });
+	    },
+
 	    render: function () {
 	        return React.createElement(
 	            'div',
 	            { className: 'container' },
-	            React.createElement(SearchUser, null)
+	            React.createElement(SearchUser, {
+	                updateUser: this.updateUser,
+	                updateRepos: this.updateRepos
+	            }),
+	            React.createElement(UserInfo, {
+	                user: this.state.user,
+	                repos: this.state.repos
+	            })
 	        );
 	    }
 
@@ -21452,7 +21475,14 @@
 
 	    handleSubmit: function (e) {
 	        e.preventDefault();
-	        GitHubUser.getByUsername(this.refs.username.value);
+
+	        GitHubUser.getByUsername(this.refs.username.value).then(function (response) {
+	            this.props.updateUser(response.data);
+	        }.bind(this));
+
+	        GitHubUser.getReposByUsername(this.refs.username.value).then(function (response) {
+	            this.props.updateRepos(response.data);
+	        }.bind(this));
 	    },
 	    render: function () {
 	        return React.createElement(
@@ -21490,6 +21520,11 @@
 	    }
 	});
 
+	SearchUser.propTypes = {
+	    updateUser: React.PropTypes.func.isRequired,
+	    updateRepos: React.PropTypes.func.isRequired
+	};
+
 	module.exports = SearchUser;
 
 /***/ },
@@ -21500,12 +21535,10 @@
 
 	var GitHubUser = {
 	    getByUsername: function (username) {
-	        return axios.get('https://api.github.com/users/' + username).then(function (response) {
-	            console.log(response);
-	        });
+	        return axios.get('https://api.github.com/users/' + username);
 	    },
 	    getReposByUsername: function (username) {
-	        return axios.get('https://api/.github.com/users' + username + '/repos');
+	        return axios.get('https://api.github.com/users/' + username + '/repos');
 	    }
 	};
 
@@ -22991,6 +23024,144 @@
 	  };
 	};
 
+
+/***/ },
+/* 200 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+
+	var UserRepos = __webpack_require__(201);
+
+	function UserInfo(props) {
+	  var userInfo = props.user ? React.createElement(
+	    'div',
+	    { className: 'row' },
+	    React.createElement(
+	      'div',
+	      { className: 'col-lg-4' },
+	      React.createElement('img', { className: 'img-circle', src: props.user.avatar_url, alt: 'avatar', width: '140', height: '140' }),
+	      React.createElement(
+	        'h2',
+	        null,
+	        props.user.login
+	      ),
+	      React.createElement(
+	        'p',
+	        null,
+	        props.user.name
+	      ),
+	      React.createElement(
+	        'p',
+	        null,
+	        'Followers: ',
+	        props.user.followers,
+	        ' / Following: ',
+	        props.user.following
+	      ),
+	      React.createElement(
+	        'p',
+	        null,
+	        React.createElement(
+	          'a',
+	          { className: 'btn btn-default', href: props.user.html_url, role: 'button' },
+	          'View details'
+	        )
+	      )
+	    ),
+	    React.createElement(
+	      'div',
+	      { className: 'col-lg-8' },
+	      React.createElement(UserRepos, { repos: props.repos })
+	    )
+	  ) : null;
+
+	  return userInfo;
+	}
+
+	UserInfo.propTypes = {
+	  user: React.PropTypes.object,
+	  repos: React.PropTypes.array
+	};
+
+	module.exports = UserInfo;
+
+/***/ },
+/* 201 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+
+	var UserRepos = React.createClass({
+	  displayName: "UserRepos",
+
+	  getInitialState: function () {
+	    return {
+	      reposCount: 0
+	    };
+	  },
+	  componentWillReceiveProps: function (props) {
+	    this.setState({ reposCount: props.repos.length });
+	  },
+	  render: function () {
+	    var repos = this.props.repos.map(function (repo, key) {
+	      return React.createElement(
+	        "div",
+	        { key: key, className: "thumbnail" },
+	        React.createElement(
+	          "div",
+	          { className: "caption" },
+	          React.createElement(
+	            "h3",
+	            null,
+	            repo.name,
+	            React.createElement(
+	              "span",
+	              { className: "badge" },
+	              repo.stargazers_count,
+	              " STARS"
+	            )
+	          ),
+	          React.createElement(
+	            "p",
+	            null,
+	            repo.description
+	          ),
+	          React.createElement(
+	            "p",
+	            null,
+	            React.createElement(
+	              "a",
+	              { href: repo.html_url, className: "btn btn-primary", role: "button" },
+	              "Repository"
+	            ),
+	            React.createElement(
+	              "a",
+	              { href: repo.html_url + '/issues', className: "btn btn-default", role: "button" },
+	              "Issues (",
+	              repo.open_issues,
+	              ") "
+	            )
+	          )
+	        )
+	      );
+	    });
+
+	    return React.createElement(
+	      "div",
+	      null,
+	      React.createElement(
+	        "h2",
+	        null,
+	        this.state.reposCount,
+	        " repositories"
+	      ),
+	      repos
+	    );
+	  }
+	});
+
+	module.exports = UserRepos;
 
 /***/ }
 /******/ ]);

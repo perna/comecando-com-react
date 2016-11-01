@@ -4,7 +4,14 @@ var GitHubUser = require('../services/GitHubUser');
 var SearchUser = React.createClass({
     handleSubmit: function(e) {
         e.preventDefault();
-        GitHubUser.getByUsername(this.refs.username.value);
+
+        GitHubUser.getByUsername(this.refs.username.value).then(function(response){
+            this.props.updateUser(response.data);
+        }.bind(this));
+
+        GitHubUser.getReposByUsername(this.refs.username.value).then(function(response){
+            this.props.updateRepos(response.data);
+        }.bind(this));
     },
     render: function(){
         return(
@@ -23,5 +30,10 @@ var SearchUser = React.createClass({
         );
     }
 });
+
+SearchUser.propTypes = {
+  updateUser: React.PropTypes.func.isRequired,
+  updateRepos: React.PropTypes.func.isRequired,
+};
 
 module.exports = SearchUser;
